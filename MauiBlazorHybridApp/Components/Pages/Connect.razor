@@ -1,0 +1,64 @@
+﻿@page "/connect/{device}"
+
+@using System.Threading.Tasks
+@inject NavigationManager Navigation
+
+<h3>Connect to: @device</h3>
+
+@if (_isScanning)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Scanning...</span>
+    </div>
+}
+
+<ul>
+    @foreach (var service in _services.Where(d => d != ""))
+    {
+        <button class="btn btn-link" @onclick="() => ConnectToService(service)">@service</button>
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public string device { get; set; }
+
+    private List<string> _services = new List<string>();
+
+    private BluetoothService _bluetoothService;
+
+    private bool _isScanning = false;
+
+    protected override async void OnInitialized()
+    {
+        if (device == null)
+        {
+            device = device ?? "No device specified";
+            await Task.Delay(1000); // Sleep for 1 second
+            Navigation.NavigateTo("/bluetooth");
+        } 
+        else 
+        {
+            // Connect to the device
+            _bluetoothService = new BluetoothService();
+            bool connected = await _bluetoothService.ConnectToDeviceAsync(device);
+            if(connected)
+            {
+                _isScanning = true;
+                await _bluetoothService.GetServicesAsync(_services);
+                _isScanning = false;
+                StateHasChanged();
+            }
+            else
+            {
+                await Task.Delay(1000); // Sleep for 1 second
+                Navigation.NavigateTo("/bluetooth");        
+            }
+        }
+    }
+
+    private void ConnectToService(string service)
+    {
+        Navigation.NavigateTo($"/service/{service}");       // To be implemented: Service.razor
+    }
+}

@@ -1,0 +1,47 @@
+﻿@page "/characteristic/{serviceId}/{characteristicId}"
+
+@using System.Threading.Tasks
+@inject NavigationManager Navigation    
+
+<h3>Characteristic</h3>
+<h2>@serviceId</h2>
+<h2>@characteristicId</h2>
+
+@if(value != "")
+{
+    <h2>Value: @value</h2>
+}
+
+<button class="btn btn-primary" @onclick="() => ReadCharacteristic(serviceId,characteristicId)">Read Characteristic</button>
+
+@code {
+    [Parameter]
+    public string serviceId { get; set; }  
+    [Parameter]
+    public string characteristicId { get; set; }
+
+    private string value = "";
+
+    private BluetoothService _bluetoothService;
+
+    protected override async void OnInitialized()
+    {
+        if (serviceId == null || characteristicId == null)
+        {
+            await Task.Delay(1000); // Sleep for 1 second
+            Navigation.NavigateTo("/bluetooth");
+        }
+        else
+        {
+            // Connect to the device
+            _bluetoothService = new BluetoothService();
+            ReadCharacteristic(serviceId, characteristicId);
+        }
+    }
+
+    public async void ReadCharacteristic(string serviceId, string characteristicId)
+    {
+        value = await _bluetoothService.ReadCharacteristicAsync(serviceId, characteristicId);
+        StateHasChanged();
+    }
+}
